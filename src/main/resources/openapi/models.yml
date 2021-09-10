@@ -1,0 +1,91 @@
+openapi: "3.0.0"
+info:
+  title: model describe
+  version: 0.0.1
+paths:
+  /models:
+    get:
+      summary: get model list
+      operationId: listModels
+      tags:
+        - models
+      responses:
+        '200':
+          description: model list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Model'
+        '400':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: create model
+      operationId: createModels
+      responses:
+        '201':
+          description: model object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+        '400':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /models/{modelId}:
+    get:
+      summary: get model by id
+      operationId: showModelById
+      parameters:
+        - in: path
+          name: modelId
+          required: true
+          description: model id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: model object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+        '400':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Model:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        tag:
+          type: string
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
