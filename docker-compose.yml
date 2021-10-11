@@ -1,0 +1,32 @@
+version: '2'
+services:
+  rabbit:
+    image: rabbitmq:3.6-management-alpine
+    container_name: rabbit
+    environment:
+      - RABBITMQ_ENABLE_MANAGEMENT_PLUGIN=1
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./volumes/rabbit/logs:/data/log
+      - ./volumes/rabbit/data:/data/mnesia
+  mongo:
+    image: mongo:3.2
+    entrypoint: "mongod --profile=1 --slowms=1 --logpath=/var/log/mongodb/mongod.log"
+    container_name: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - ./volumes/mongo/db:/data/db
+      - ./volumes/mongo/logs:/var/log/mongodb
+  elastic:
+    image: elasticsearch:7.6.2
+    container_name: elastic
+    ports:
+      - 9300:9300
+      - 9200:9200
+    environment:
+      - "discovery.type=single-node"
+    volumes:
+      - ./volumes/elastic/data:/usr/share/elasticsearch/data

@@ -1,19 +1,14 @@
 package org.sguesdon.api.jsonvalidator.models.domain.entity;
 
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
-
-@Entity
 @Data
-@Table(name = "models")
+@Document("models")
 public class ModelDto {
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    @Column(name = "id")
-    long id;
-    @Column(name = "name")
+    String id;
     String name;
-    @Column(name = "tag")
     String tag;
 }

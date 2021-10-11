@@ -73,8 +73,7 @@ paths:
           required: true
           description: model id
           schema:
-            type: integer
-            format: int64
+            type: string
       responses:
         '200':
           description: model object
@@ -104,8 +103,7 @@ paths:
           required: true
           description: model id
           schema:
-            type: integer
-            format: int64
+            type: string
       responses:
         '200':
           description: model object
@@ -130,8 +128,7 @@ paths:
           required: true
           description: model id
           schema:
-            type: integer
-            format: int64
+            type: string
       responses:
         '200':
           description: delete success
@@ -149,8 +146,7 @@ components:
         - name
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
         name:
           type: string
         tag:
