@@ -11,4 +11,5 @@ public class ModelDto {
     String id;
     String name;
     String tag;
+    String schema;
 }

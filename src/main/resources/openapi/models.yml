@@ -144,12 +144,15 @@ components:
       type: object
       required:
         - name
+        - schema
       properties:
         id:
           type: string
         name:
           type: string
         tag:
+          type: string
+        schema:
           type: string
     Error:
       type: object

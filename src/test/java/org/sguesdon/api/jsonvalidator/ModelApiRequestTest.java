@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.sguesdon.api.jsonvalidator.openapi.model.Model;
 import org.sguesdon.api.jsonvalidator.models.repository.ModelRepository;
+import org.sguesdon.api.jsonvalidator.openapi.model.Model;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +54,7 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("name");
         model.setTag("tag1,tag2");
+        model.setSchema("{}");
 
         Model response = WebClient.create()
             .post()
@@ -78,6 +78,7 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("initial_name");
         model.setTag("initial_tag");
+        model.setSchema("{}");
 
         Model response = WebClient.create()
                 .post()
@@ -113,6 +114,7 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("initial_name");
         model.setTag("initial_tag");
+        model.setSchema("{}");
 
         Model response = WebClient.create()
             .post()
@@ -148,6 +150,7 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("post_get");
         model.setTag("post_get");
+        model.setSchema("{}");
 
         Model response = WebClient.create()
                 .post()
@@ -179,6 +182,7 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("nname");
         model.setTag("ttag");
+        model.setSchema("{}");
 
         for(int i = 0; i < 50; i++) {
             WebClient.create()
