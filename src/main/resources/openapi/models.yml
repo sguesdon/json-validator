@@ -2,11 +2,27 @@ openapi: "3.0.0"
 info:
   title: model describe
   version: 0.0.1
+servers:
+  - url: http://localhost:8080
+    description: local server
 paths:
   /models:
     get:
       summary: get model list
       operationId: listModels
+      parameters:
+        - in: query
+          name: page
+          description: page
+          schema:
+            default: 0
+            type: integer
+        - in: query
+          name: size
+          description: page
+          schema:
+            default: 25
+            type: integer
       tags:
         - models
       responses:
@@ -27,6 +43,13 @@ paths:
     post:
       summary: create model
       operationId: createModels
+      requestBody:
+        description: Optional description in *Markdown*
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Model'
       responses:
         '201':
           description: model object
@@ -51,6 +74,7 @@ paths:
           description: model id
           schema:
             type: integer
+            format: int64
       responses:
         '200':
           description: model object
@@ -58,6 +82,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Model'
+        '400':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: update model by id
+      operationId: updateModelById
+      requestBody:
+        description: Optional description in *Markdown*
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Model'
+      parameters:
+        - in: path
+          name: modelId
+          required: true
+          description: model id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: model object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+        '400':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: not found
+    delete:
+      summary: delete model by id
+      operationId: deleteModelById
+      parameters:
+        - in: path
+          name: modelId
+          required: true
+          description: model id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: delete success
         '400':
           description: error
           content:
