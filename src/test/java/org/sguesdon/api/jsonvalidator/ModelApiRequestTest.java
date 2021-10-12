@@ -3,6 +3,7 @@ package org.sguesdon.api.jsonvalidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sguesdon.api.jsonvalidator.models.repository.ModelRepository;
@@ -70,6 +71,28 @@ public class ModelApiRequestTest {
             this.objectMapper.writeValueAsString(response),
             JSONCompareMode.LENIENT
         );
+    }
+
+    @Test
+    public void postInvalidSchemaModel() throws Exception {
+
+        final Model model = new Model();
+        model.setName("name");
+        model.setTag("tag1,tag2");
+        model.setSchema("{");
+
+        ResponseEntity<Void> response = WebClient.create()
+                .post()
+                .uri(getUrl("models"))
+                .accept(MediaType.APPLICATION_JSON)
+                .body(Mono.just(model), Model.class)
+                .retrieve()
+                .onStatus(HttpStatus::isError, (r) -> Mono.error(new Exception(r.toString())))
+                .toBodilessEntity()
+                .block();
+
+        Assertions.assertEquals(400, response.getStatusCode());
+        Assertions.assertEquals("", response.getBody());
     }
 
     @Test

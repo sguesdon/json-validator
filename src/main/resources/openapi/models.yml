@@ -138,6 +138,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /models/{modelId}/validate:
+    post:
+      summary: validate date with model
+      operationId: validateDataWithModel
+      parameters:
+        - in: path
+          name: modelId
+          required: true
+          description: model id
+          schema:
+            type: string
+      requestBody:
+        description: data need validation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '204':
+          description: validation successful
+        '400':
+          description: error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Model:
