@@ -19,8 +19,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -81,18 +85,20 @@ public class ModelApiRequestTest {
         model.setTag("tag1,tag2");
         model.setSchema("{");
 
-        ResponseEntity<Void> response = WebClient.create()
+        String response = WebClient.create()
                 .post()
-                .uri(getUrl("models"))
+                .uri(getUrl("models"), "not_exist")
                 .accept(MediaType.APPLICATION_JSON)
                 .body(Mono.just(model), Model.class)
                 .retrieve()
-                .onStatus(HttpStatus::isError, (r) -> Mono.error(new Exception(r.toString())))
-                .toBodilessEntity()
+                .bodyToMono(String.class)
+                .onErrorResume(WebClientResponseException.class, ex -> Mono.just(ex.getResponseBodyAsString()))
                 .block();
 
-        Assertions.assertEquals(400, response.getStatusCode());
-        Assertions.assertEquals("", response.getBody());
+        Assertions.assertEquals(
+                "{\"code\":400,\"message\":\"invalid json schema\",\"trace\":\"\"}",
+                response
+        );
     }
 
     @Test
@@ -128,6 +134,30 @@ public class ModelApiRequestTest {
                 "{id:" + response.getId() + ",name:\"new_name\",tag: \"new_tag\"}",
                 this.objectMapper.writeValueAsString(response),
                 JSONCompareMode.LENIENT
+        );
+    }
+
+    @Test
+    public void putMissingModel() throws Exception {
+
+        final Model model = new Model();
+        model.setName("initial_name");
+        model.setTag("initial_tag");
+        model.setSchema("{}");
+
+        String response = WebClient.create()
+                .put()
+                .uri(getUrl("models/{id}"), "not_exist")
+                .accept(MediaType.APPLICATION_JSON)
+                .body(Mono.just(model), Model.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .onErrorResume(WebClientResponseException.class, ex -> Mono.just(ex.getResponseBodyAsString()))
+                .block();
+
+        Assertions.assertEquals(
+                "{\"code\":404,\"message\":\"model with id not_exist doesn't exist\",\"trace\":\"\"}",
+                response
         );
     }
 
@@ -245,4 +275,36 @@ public class ModelApiRequestTest {
 
         assertThat(num).isEqualTo(50);
     }
+
+    @Test
+    public void postAndValidateJson() throws IOException, JSONException {
+
+        final Model data = new Model();
+        data.setName("post_get");
+        data.setTag("post_get");
+        data.setSchema(Files.readString(Path.of("src/test/resources/json_schema_1.json")));
+
+        Model model = WebClient.create()
+                .post()
+                .uri(getUrl("models"))
+                .accept(MediaType.APPLICATION_JSON)
+                .body(Mono.just(data), Model.class)
+                .retrieve()
+                .bodyToMono(Model.class)
+                .block();
+
+        ResponseEntity<Void> response = WebClient.create()
+                .post()
+                .uri(getUrl("models/{id}/validate"), model.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Files.readString(Path.of("src/test/resources/json_data_1.json")))
+                .retrieve()
+                .toBodilessEntity()
+                .block();
+
+        Assertions.assertEquals(204, response.getStatusCode().value());
+    }
+
+    // TODO : test echec + restitution des champs qui posent problème
 }
