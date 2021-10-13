@@ -8,6 +8,8 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.sguesdon.api.jsonvalidator.models.domain.entity.ModelDto;
 import org.sguesdon.api.jsonvalidator.models.domain.mapper.ModelMapperImpl;
+import org.sguesdon.api.jsonvalidator.models.exception.InvalidSchemaException;
+import org.sguesdon.api.jsonvalidator.models.exception.NotFoundException;
 import org.sguesdon.api.jsonvalidator.models.repository.ModelRepository;
 import org.sguesdon.api.jsonvalidator.openapi.api.ModelsApiDelegate;
 import org.sguesdon.api.jsonvalidator.openapi.model.Model;
@@ -31,63 +33,63 @@ public class ModelsController implements ModelsApiDelegate {
         return ResponseEntity.ok(mapper.fromDtos(repo.findAll(paging).toList()));
     }
 
-    public ResponseEntity<Model> createModels(Model model) {
+    public ResponseEntity<Model> createModels(Model model) throws InvalidSchemaException {
 
         try {
-            JSONObject jsonSchema = new JSONObject(new JSONTokener(model.getSchema()));
-        } catch (JSONException e) {
-            return ResponseEntity.badRequest().build();
+            new JSONObject(new JSONTokener(model.getSchema()));
+        } catch(JSONException exception) {
+            throw new InvalidSchemaException("invalid json schema");
         }
 
         return ResponseEntity.ok(mapper.fromDto(repo.save(mapper.toDto(model))));
     }
 
-    public ResponseEntity<Model> updateModelById(String modelId, Model model) {
-        if(this.repo.existsById(modelId)) {
+    public ResponseEntity<Model> updateModelById(String modelId, Model model) throws InvalidSchemaException, NotFoundException {
 
-            try {
-                JSONObject jsonSchema = new JSONObject(new JSONTokener(model.getSchema()));
-            } catch (JSONException e) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            model.setId(modelId);
-            return ResponseEntity.ok(mapper.fromDto(repo.save(mapper.toDto(model))));
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    public ResponseEntity<Void> deleteModelById(String modelId) {
-        if(this.repo.existsById(modelId)) {
-            this.repo.deleteById(modelId);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    public ResponseEntity<Model> showModelById(String modelId) {
-        Optional<ModelDto> modelDtoOptional = repo.findById(modelId);
-        return modelDtoOptional
-            .map(modelDto -> ResponseEntity.ok(mapper.fromDto(modelDto)))
-            .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    public ResponseEntity<Void> validateDataWithModel(String modelId, String body) {
-
-        Optional<ModelDto> modelDtoOptional = repo.findById(modelId);
-
-        if(modelDtoOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        if(!this.repo.existsById(modelId)) {
+            throw new NotFoundException(String.format("model with id %s doesn't exist", modelId));
         }
 
         try {
-            JSONObject jsonSchema = new JSONObject(new JSONTokener(modelDtoOptional.get().getSchema()));
+            new JSONObject(new JSONTokener(model.getSchema()));
+        } catch(JSONException exception) {
+            throw new InvalidSchemaException("invalid json schema");
+        }
+
+        model.setId(modelId);
+        return ResponseEntity.ok(mapper.fromDto(repo.save(mapper.toDto(model))));
+    }
+
+    public ResponseEntity<Void> deleteModelById(String modelId) throws NotFoundException {
+
+        if(!this.repo.existsById(modelId)) {
+            throw new NotFoundException(String.format("model with id %s doesn't exist", modelId));
+        }
+
+        this.repo.deleteById(modelId);
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<Model> showModelById(String modelId) throws NotFoundException {
+        Optional<ModelDto> modelDtoOptional = repo.findById(modelId);
+        return modelDtoOptional
+            .map(modelDto -> ResponseEntity.ok(mapper.fromDto(modelDto)))
+            .orElseThrow(() -> new NotFoundException(String.format("model with id %s doesn't exist", modelId)));
+    }
+
+    public ResponseEntity<Void> validateDataWithModel(String modelId, String body) throws NotFoundException, InvalidSchemaException {
+
+        ModelDto modelDto = repo.findById(modelId)
+            .orElseThrow(() -> new NotFoundException(String.format("model with id %s doesn't exist", modelId)));
+
+        try {
+            JSONObject jsonSchema = new JSONObject(new JSONTokener(modelDto.getSchema()));
             JSONObject jsonSubject = new JSONObject(new JSONTokener(body));
             Schema schema = SchemaLoader.load(jsonSchema);
             schema.validate(jsonSubject);
             return ResponseEntity.noContent().build();
-        } catch (JSONException e) {
-            return ResponseEntity.badRequest().build();
+        } catch(JSONException exception) {
+            throw new InvalidSchemaException("json not valid");
         }
     }
 }
