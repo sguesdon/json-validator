@@ -1,4 +1,4 @@
-package org.sguesdon.api.jsonvalidator.models.domain.entity;
+package org.sguesdon.api.jsonvalidator.domain.entity;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;

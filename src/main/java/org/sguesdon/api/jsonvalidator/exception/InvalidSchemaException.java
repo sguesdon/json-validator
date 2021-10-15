@@ -1,4 +1,4 @@
-package org.sguesdon.api.jsonvalidator.models.exception;
+package org.sguesdon.api.jsonvalidator.exception;
 
 public class InvalidSchemaException extends Exception {
     public InvalidSchemaException(String message) {

@@ -1,7 +1,7 @@
-package org.sguesdon.api.jsonvalidator.models.domain.mapper;
+package org.sguesdon.api.jsonvalidator.domain.mapper;
 
 import org.mapstruct.Mapper;
-import org.sguesdon.api.jsonvalidator.models.domain.entity.ModelDto;
+import org.sguesdon.api.jsonvalidator.domain.entity.ModelDto;
 import org.sguesdon.api.jsonvalidator.openapi.model.Model;
 
 import java.util.List;

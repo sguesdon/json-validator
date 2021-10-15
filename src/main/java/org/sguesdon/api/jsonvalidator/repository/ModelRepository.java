@@ -1,6 +1,6 @@
-package org.sguesdon.api.jsonvalidator.models.repository;
+package org.sguesdon.api.jsonvalidator.repository;
 
-import org.sguesdon.api.jsonvalidator.models.domain.entity.ModelDto;
+import org.sguesdon.api.jsonvalidator.domain.entity.ModelDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;

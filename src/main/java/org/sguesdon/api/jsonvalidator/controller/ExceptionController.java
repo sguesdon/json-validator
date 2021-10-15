@@ -1,9 +1,9 @@
-package org.sguesdon.api.jsonvalidator.models.controller;
+package org.sguesdon.api.jsonvalidator.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.sguesdon.api.jsonvalidator.models.exception.InvalidSchemaException;
-import org.sguesdon.api.jsonvalidator.models.exception.NotFoundException;
+import org.sguesdon.api.jsonvalidator.exception.InvalidSchemaException;
+import org.sguesdon.api.jsonvalidator.exception.NotFoundException;
 import org.sguesdon.api.jsonvalidator.openapi.model.Error;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
