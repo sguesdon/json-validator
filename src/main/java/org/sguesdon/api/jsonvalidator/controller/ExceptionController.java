@@ -2,6 +2,7 @@ package org.sguesdon.api.jsonvalidator.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.everit.json.schema.ValidationException;
 import org.sguesdon.api.jsonvalidator.exception.InvalidSchemaException;
 import org.sguesdon.api.jsonvalidator.exception.NotFoundException;
 import org.sguesdon.api.jsonvalidator.openapi.model.Error;
@@ -38,6 +39,19 @@ public class ExceptionController {
                         .trace("")
                         .build()
             );
+    }
+
+    @ExceptionHandler(value = {ValidationException.class})
+    public ResponseEntity<Error> handleValidationException(ValidationException exception) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(
+                        Error.builder()
+                                .code(HttpStatus.BAD_REQUEST.value())
+                                .message(exception.getMessage())
+                                .trace("")
+                                .build()
+                );
     }
 
     @ExceptionHandler

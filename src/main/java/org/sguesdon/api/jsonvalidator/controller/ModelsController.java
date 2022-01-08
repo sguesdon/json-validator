@@ -1,8 +1,6 @@
 package org.sguesdon.api.jsonvalidator.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.everit.json.schema.Schema;
-import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -13,6 +11,7 @@ import org.sguesdon.api.jsonvalidator.exception.NotFoundException;
 import org.sguesdon.api.jsonvalidator.openapi.api.ModelsApiDelegate;
 import org.sguesdon.api.jsonvalidator.openapi.model.Model;
 import org.sguesdon.api.jsonvalidator.repository.ModelRepository;
+import org.sguesdon.api.jsonvalidator.utils.JsonValidator;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -78,18 +77,8 @@ public class ModelsController implements BaseController, ModelsApiDelegate {
     }
 
     public ResponseEntity<Void> validateDataWithModel(String modelId, String body) throws NotFoundException, InvalidSchemaException {
-
-        ModelDto modelDto = repo.findById(modelId)
-            .orElseThrow(() -> this.notFoundException(modelId));
-
-        try {
-            JSONObject jsonSchema = new JSONObject(new JSONTokener(modelDto.getSchema()));
-            JSONObject jsonSubject = new JSONObject(new JSONTokener(body));
-            Schema schema = SchemaLoader.load(jsonSchema);
-            schema.validate(jsonSubject);
-            return ResponseEntity.noContent().build();
-        } catch(JSONException exception) {
-            throw new InvalidSchemaException("json not valid");
-        }
+        ModelDto modelDto = repo.findById(modelId).orElseThrow(() -> this.notFoundException(modelId));
+        JsonValidator.validate(modelDto, body);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -59,6 +59,8 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("name");
         model.setTag("tag1,tag2");
+        model.setCollection("collection");
+        model.setEndpoint("tag1,tag2");
         model.setSchema("{}");
 
         Model response = WebClient.create()
@@ -83,6 +85,8 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("name");
         model.setTag("tag1,tag2");
+        model.setCollection("collection");
+        model.setEndpoint("endpoint");
         model.setSchema("{");
 
         String response = WebClient.create()
@@ -107,6 +111,8 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("initial_name");
         model.setTag("initial_tag");
+        model.setCollection("initial_collection");
+        model.setEndpoint("initial_endpoint");
         model.setSchema("{}");
 
         Model response = WebClient.create()
@@ -143,6 +149,8 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("initial_name");
         model.setTag("initial_tag");
+        model.setCollection("initial_collection");
+        model.setEndpoint("initial_endpoint");
         model.setSchema("{}");
 
         String response = WebClient.create()
@@ -167,6 +175,8 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("initial_name");
         model.setTag("initial_tag");
+        model.setCollection("initial_collection");
+        model.setEndpoint("initial_endpoint");
         model.setSchema("{}");
 
         Model response = WebClient.create()
@@ -203,6 +213,8 @@ public class ModelApiRequestTest {
         final Model model = new Model();
         model.setName("post_get");
         model.setTag("post_get");
+        model.setCollection("post_collection");
+        model.setEndpoint("post_endpoint");
         model.setSchema("{}");
 
         Model response = WebClient.create()
@@ -233,11 +245,15 @@ public class ModelApiRequestTest {
     public void postAndGetPaginateModels() {
 
         final Model model = new Model();
-        model.setName("nname");
-        model.setTag("ttag");
+        model.setTag("tag");
         model.setSchema("{}");
 
         for(int i = 0; i < 50; i++) {
+
+            model.setName("name_" + i);
+            model.setCollection("collection_" + i);
+            model.setEndpoint("endpoint_" + i);
+
             WebClient.create()
                 .post()
                 .uri(getUrl("models"))
@@ -282,6 +298,8 @@ public class ModelApiRequestTest {
         final Model data = new Model();
         data.setName("post_get");
         data.setTag("post_get");
+        data.setCollection("ahah");
+        data.setEndpoint("ahah");
         data.setSchema(Files.readString(Path.of("src/test/resources/json_schema_1.json")));
 
         Model model = WebClient.create()
@@ -306,5 +324,36 @@ public class ModelApiRequestTest {
         Assertions.assertEquals(204, response.getStatusCode().value());
     }
 
-    // TODO : test echec + restitution des champs qui posent problème
+    @Test
+    public void postAndFailedValidateJson() throws IOException, JSONException {
+
+        final Model data = new Model();
+        data.setName("name");
+        data.setTag("tag");
+        data.setCollection("collection");
+        data.setEndpoint("endpoint");
+        data.setSchema(Files.readString(Path.of("src/test/resources/json_schema_1.json")));
+
+        Model model = WebClient.create()
+                .post()
+                .uri(getUrl("models"))
+                .accept(MediaType.APPLICATION_JSON)
+                .body(Mono.just(data), Model.class)
+                .retrieve()
+                .bodyToMono(Model.class)
+                .block();
+
+        String response = WebClient.create()
+                .post()
+                .uri(getUrl("models/{id}/validate"), model.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{}")
+                .retrieve()
+                .bodyToMono(String.class)
+                .onErrorResume(WebClientResponseException.class, ex -> Mono.just(ex.getResponseBodyAsString()))
+                .block();
+
+        Assertions.assertEquals("{\"code\":400,\"message\":\"#: required key [productId] not found\",\"trace\":\"\"}", response);
+    }
 }

@@ -172,10 +172,18 @@ components:
       required:
         - name
         - schema
+        - collection
+        - endpoint
       properties:
         id:
           type: string
         name:
+          type: string
+        collection:
+          type: string
+        version:
+          type: string
+        endpoint:
           type: string
         tag:
           type: string
