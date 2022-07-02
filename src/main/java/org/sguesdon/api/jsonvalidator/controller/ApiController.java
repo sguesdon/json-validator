@@ -109,10 +109,8 @@ class ApiController implements BaseController {
             record.toJson(),
             HttpStatus.CREATED
         );
-        //return ResponseEntity.ok(record.toJson());
     }
 
-    // TODO : Reprendre les pattern d'url
     @PutMapping("/api/{modelName:.*}/{id}")
     public ResponseEntity<?> put(
         HttpServletRequest request,
