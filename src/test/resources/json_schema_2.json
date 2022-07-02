@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Product",
+  "description": "A product from Acme's catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "productId": {
+      "description": "The unique identifier for a product",
+      "type": "integer"
+    },
+    "label": {
+      "description": "label of product",
+      "type": "string"
+    }
+  },
+  "required": [
+    "productId",
+    "label"
+  ]
+}

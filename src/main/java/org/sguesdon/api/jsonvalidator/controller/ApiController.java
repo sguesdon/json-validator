@@ -6,8 +6,13 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.io.CharStreams;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.json.JSONException;
 import org.sguesdon.api.jsonvalidator.domain.entity.ModelDto;
 import org.sguesdon.api.jsonvalidator.exception.InvalidSchemaException;
@@ -15,6 +20,7 @@ import org.sguesdon.api.jsonvalidator.exception.NotFoundException;
 import org.sguesdon.api.jsonvalidator.repository.ModelRepository;
 import org.sguesdon.api.jsonvalidator.utils.JsonValidator;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -66,7 +72,9 @@ class ApiController implements BaseController {
             jGenerator.writeStartArray();
 
             while (cursor.hasNext()) {
-                jGenerator.writeRaw(cursor.next().toJson());
+                Document document = cursor.next();
+                document.put("_id", document.getObjectId("_id").toString());
+                jGenerator.writeRaw(document.toJson());
             }
 
             cursor.close();
@@ -95,38 +103,69 @@ class ApiController implements BaseController {
 
         collection.insertOne(record);
 
-        // TODO : HTTP STATUS
-        return ResponseEntity.ok(record.toJson());
+        record.put("_id", record.getObjectId("_id").toString());
+
+        return new ResponseEntity<>(
+            record.toJson(),
+            HttpStatus.CREATED
+        );
+        //return ResponseEntity.ok(record.toJson());
     }
 
     // TODO : Reprendre les pattern d'url
-    @PutMapping("/api/**")
-    public ResponseEntity<?> put(HttpServletRequest request) throws NotFoundException, IOException, InvalidSchemaException {
+    @PutMapping("/api/{modelName:.*}/{id}")
+    public ResponseEntity<?> put(
+        HttpServletRequest request,
+        @PathVariable String modelName,
+        @PathVariable String id
+    ) throws NotFoundException, IOException, InvalidSchemaException {
 
-        final ModelDto model = this.findModel(request);
+        final ModelDto model = this.findModel(modelName);
         final String body = CharStreams.toString(request.getReader());
-        final MongoCollection<Document> collection = this.mongoTemplate.getCollection(model.getCollection());
-        final Document record = Document.parse(body);
-        // TODO : A FINIR
-        /**
+
         JsonValidator.validate(model, body);
-        collection.find(new ObjectId(record.get("_id")))
-        collection.updateOne()
-        return ResponseEntity.ok();
-        **/
-        return ResponseEntity.ok().build();
+
+        final Document record = Document.parse(body);
+        final MongoCollection<Document> collection = this.mongoTemplate.getCollection(model.getCollection());
+
+        final Bson condition = Filters.eq("_id", new ObjectId(id));
+        Document update = new Document();
+        update.append("$set", record);
+
+        final UpdateResult res = collection.updateOne(condition, update);
+
+        if(res.getMatchedCount() == 1 && res.getModifiedCount() == 1) {
+            return ResponseEntity.noContent().build();
+        }
+
+        throw this.notFoundException(id);
     }
 
-    // TODO : A FINIR
-    @DeleteMapping("/api/**")
-    public ResponseEntity<?> delete(HttpServletRequest request) throws NotFoundException {
-        ModelDto model = this.findModel(request);
-        return ResponseEntity.ok().build();
+    @DeleteMapping("/api/{modelName:.*}/{id}")
+    public ResponseEntity<?> delete(
+        @PathVariable String modelName,
+        @PathVariable String id
+    ) throws NotFoundException {
+
+        final ModelDto model = this.findModel(modelName);
+        final MongoCollection<Document> collection = this.mongoTemplate.getCollection(model.getCollection());
+        final Bson condition = Filters.eq("_id", new ObjectId(id));
+        final DeleteResult res = collection.deleteOne(condition);
+
+        if(res.getDeletedCount() == 1) {
+            return ResponseEntity.ok().build();
+        }
+
+        throw this.notFoundException(id);
     }
 
     private ModelDto findModel(HttpServletRequest request) throws NotFoundException {
         final String requestURL = request.getRequestURL().toString();
         final String endpoint = requestURL.split("/api/")[1];
+        return this.findModel(endpoint);
+    }
+
+    private ModelDto findModel(String endpoint) throws NotFoundException {
         return this.modelRepository.findOneByEndpoint(endpoint).orElseThrow(() -> this.notFoundException(endpoint));
     }
 }

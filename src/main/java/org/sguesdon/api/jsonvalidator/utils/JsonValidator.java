@@ -1,6 +1,7 @@
 package org.sguesdon.api.jsonvalidator.utils;
 
 import org.everit.json.schema.Schema;
+import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,9 +16,8 @@ public class JsonValidator {
             JSONObject jsonSubject = new JSONObject(new JSONTokener(json));
             Schema schema = SchemaLoader.load(jsonSchema);
             schema.validate(jsonSubject);
-        } catch(
-                JSONException exception) {
-            throw new InvalidSchemaException("json not valid");
+        } catch(JSONException | ValidationException exception) {
+            throw new InvalidSchemaException("invalid json : " + exception.getMessage());
         }
     }
 }

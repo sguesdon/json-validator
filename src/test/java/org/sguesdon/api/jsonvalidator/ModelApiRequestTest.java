@@ -354,6 +354,6 @@ public class ModelApiRequestTest {
                 .onErrorResume(WebClientResponseException.class, ex -> Mono.just(ex.getResponseBodyAsString()))
                 .block();
 
-        Assertions.assertEquals("{\"code\":400,\"message\":\"#: required key [productId] not found\",\"trace\":\"\"}", response);
+        Assertions.assertEquals("{\"code\":400,\"message\":\"invalid json : #: required key [productId] not found\",\"trace\":\"\"}", response);
     }
 }
